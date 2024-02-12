@@ -1,9 +1,5 @@
-
-#!/usr/bin/env python3
 import os
-import glob
-import csv
-import sys
+import argparse
 
 SEROGROUPING_DOCKER_APP_DIR = '/app/serogrouping'
 
@@ -11,15 +7,10 @@ def runCdcSerogroupPrediction(in_dir, out_dir):
     os.system(f'python3 {SEROGROUPING_DOCKER_APP_DIR}/characterize_neisseria_capsule.py -d {in_dir} -o {out_dir}')
 
 
-if len(sys.argv) != 3:
-    exit("""
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    You need 2 (and only 2) arguments: 
-        1- The assemblies directory
-        2- An output directory
-    """)
-assemblies = sys.argv[1]
-output_dir = sys.argv[2]
+parser = argparse.ArgumentParser(description="Get your samples serogroup (feat CDC)")
+parser.add_argument("--input-dir", dest="input", required=True, help="Here your assemblies directory")
+parser.add_argument("--output-dir", dest="output", required=True, help="Here your destination directory")
 
+args = parser.parse_args()
 
-runCdcSerogroupPrediction(assemblies, output_dir)
+runCdcSerogroupPrediction(args.input, args.output)
