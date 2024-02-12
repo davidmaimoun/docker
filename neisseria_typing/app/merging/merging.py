@@ -1,6 +1,8 @@
 import pandas as pd
 import sys
 import json
+import argparse
+
 
 
 def determineSerogroup(in_dir):
@@ -14,16 +16,18 @@ def determineSerogroup(in_dir):
             matchs[sample['sample_name']] = sample['predicted_sg']
     return matchs
 
-typing_file = sys.argv[1]
-serogrouping_results = sys.argv[2]
-output_file = "typing_serogrouping_report.csv"
+parser = argparse.ArgumentParser(description="Merging typing report and serogrouping result")
+parser.add_argument("--typing", dest="typing_file", required=True, help="Here your typing CSV file")
+parser.add_argument("--sg-dir", dest="serogrouping_results", required=True, help="Here your serogroup results directory (the serogrouping.py output)")
+parser.add_argument("--output", dest="output", required=True, help="Here your destination directory")
 
-serogrouping_match = determineSerogroup(serogrouping_results)
+args = parser.parse_args()
+
+serogrouping_match = determineSerogroup(args.serogrouping_results)
 
 columns = ['Sample', 'Serogroup']
 serogrouping_df = pd.DataFrame(list(serogrouping_match.items()), columns=columns)
-typing_df = pd.read_csv(typing_file, index_col=False) # Prevent the date field to be index
+typing_df = pd.read_csv(args.typing_file, index_col=False) # Prevent the date field to be index
 
 merged_df = typing_df.merge(serogrouping_df, on="Sample")
-merged_df.to_csv('output_file', index=False)
-
+merged_df.to_csv(f"{args.output}/typing_final_report.csv", index=False)
