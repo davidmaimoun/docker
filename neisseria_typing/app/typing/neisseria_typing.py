@@ -4,7 +4,7 @@ import os
 import sys
 import json
 from datetime import date, datetime
-
+import argparse
 
 NADA_PEPTIDE = 'NadA_peptide'
 LOCI_MATCH=0
@@ -124,9 +124,11 @@ def populateURL(data, al):
     return str[:-1]
 
 
-sample = sys.argv[1]
-sample_assembly = sys.argv[2]
-output_dir = sys.argv[3]
+parser = argparse.ArgumentParser(description="Get your sample typing (MSLT, BAST, Finetyping, MenDeVar)")
+parser.add_argument("--input", dest="assembly", required=True, help="Here your sample assembly")
+parser.add_argument("--output", dest="output_dir", required=True, help="Here your destination directory")
+
+args = parser.parse_args()
 
 keys = "Date,Sample,ST,CC,BAST Type"
 list_values = []
@@ -138,12 +140,12 @@ data = []
 current_date = date.today().strftime("%d-%m-%Y")
 current_time = datetime.now().strftime("%H:%M:%S")
 
-print(sample_assembly)
+sample = os.path.splitext(os.path.basename(args.assembly))[0]
 
 for type in ['mlst', 'bast', 'finetyping']:
-    out_file = os.path.join(output_dir, f"{sample}_{type}.json")
+    out_file = os.path.join(args.output_dir, f"{sample}_{type}.json")
 
-    getProfile(type, sample_assembly, out_file)
+    getProfile(type, args.assembly, out_file)
     is_id = fetchAlleleId(out_file, typing)
 
     if is_id and type == 'mlst':
@@ -152,10 +154,10 @@ if NADA_PEPTIDE not in typing:
     typing[NADA_PEPTIDE] = "0"
 
 if typing[NADA_PEPTIDE] == "0":
-    out_file = os.path.join(output_dir, f"{sample}_nada.json")
-    getNadA('nadA', sample_assembly, out_file)
+    out_file = os.path.join(args.output_dir, f"{sample}_nada.json")
+    getNadA('nadA', args.assembly, out_file)
 
-data = fetchBAST(alleles_bast, typing, output_dir)
+data = fetchBAST(alleles_bast, typing, args.output_dir)
 if len(data) == 0 :
     bast_type = 'null'
     bexsero = 'null'
@@ -181,7 +183,7 @@ keys += ",Bexsero cross reactivity,Trumenba cross reactivity"
 values += f",{bexsero},{trumenba}"
 
 
-typing_report = f'{output_dir}/typing_report.csv'
+typing_report = f'{args.output_dir}/typing_report.csv'
 if not os.path.exists(typing_report):
     with open(typing_report, 'w') as f:
         f.write(f'{keys}\n')
